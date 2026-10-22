@@ -1,24 +1,40 @@
 import { HttpError } from '../middleware/errors.js';
 
+const cache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; //5 minutes
+
 //GET /api/books/search
 export async function searchBooks(req, res) {
-  const q = req.query.q; //for the q part of the url
-  if (!q || q.trim() === '') {
-    throw new HttpError(400, 'Validation failed', [
-      { field: 'q', message: 'is required' },
-    ]);
-  }
+    const q = req.query.q; //for the q part of the url
+    if (!q || q.trim() === '') {
+        throw new HttpError(400, 'Validation failed', [
+            { field: 'q', message: 'is required' },
+        ]);
+    }
 
-  const url = new URL('https://openlibrary.org/search.json');
-  url.searchParams.set('q', q);
-  url.searchParams.set('limit', '10');
-  url.searchParams.set('fields', 'key,title,author_name,first_publish_year,number_of_pages_median,cover_i');
+    const cacheKey = q.trim().toLowerCase(); //trim search text
+    const hit = cache.get(cacheKey);
+    //if hit exists and has not expired, cache the hit
+    if (hit && hit.expiresAt > Date.now()) { 
+        console.log(`[cache] HIT "${cacheKey}"`)
+        return res.status(200).json(hit.data);
+    }
+    console.log(`[cache] MISS "${cacheKey}"`);
+
+    const url = new URL('https://openlibrary.org/search.json');
+    url.searchParams.set('q', q);
+    url.searchParams.set('limit', '10');
+    url.searchParams.set('fields', 'key,title,author_name,first_publish_year,number_of_pages_median,cover_i');
 
     let body;
     //in case of complications with Open Library, using try and catch
     try {
-        const response = await fetch(url, { signal: AbortSignal.timeout(5000) }); //send request, aborts if no answer in 5 seconds with TimeoutError
-
+        //send request, aborts if no answer in 5 seconds with TimeoutError
+        const response = await fetch(url, { 
+            signal: AbortSignal.timeout(5000),
+            headers: { 'User-Agent': `PageTurner/1.0 (${process.env.CONTACT_EMAIL})`}, //send contact info along with the request
+        });
+        
         if (!response.ok) {
             throw new HttpError(502, `Open Library returned status ${response.status}`); //external API error if response isnt ok
         }   
@@ -31,18 +47,19 @@ export async function searchBooks(req, res) {
         throw new HttpError(502, 'Could not get a valid response from Open Library'); //everything else error
     }
 
-  const data = {
-  query: q,
-  total: body.numFound ?? 0,
-  results: (body.docs ?? []).map((doc) => ({
-    externalKey: doc.key,
-    title: doc.title,
-    author: doc.author_name ? doc.author_name.join(', ') : 'Unknown',
-    firstPublishYear: doc.first_publish_year ?? null,
-    pages: doc.number_of_pages_median ?? null,
-    coverId: doc.cover_i ?? null,
-  })),
-};
+    const data = {
+        query: q,
+        total: body.numFound ?? 0,
+        results: (body.docs ?? []).map((doc) => ({
+            externalKey: doc.key,
+            title: doc.title,
+            author: doc.author_name ? doc.author_name.join(', ') : 'Unknown',
+            firstPublishYear: doc.first_publish_year ?? null,
+            pages: doc.number_of_pages_median ?? null,
+            coverId: doc.cover_i ?? null,
+        })),
+    };
 
-  res.status(200).json(data);
+    cache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS }); 
+    res.status(200).json(data);
 }
