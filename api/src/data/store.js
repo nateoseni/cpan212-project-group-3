@@ -23,4 +23,14 @@ export const goals = [
   },
 ];
 
-export const entries = [];
+export const entries = [
+  {
+    id: crypto.randomUUID(),
+    goal: goals[0].id,
+    title: 'The Hobbit',
+    author: 'J.R.R. Tolkien',
+    pages: 310,
+    status: 'finished',
+    pagesRead: 310,
+  },
+];
