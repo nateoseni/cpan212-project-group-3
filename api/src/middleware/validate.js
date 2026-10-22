@@ -13,7 +13,7 @@ export function validateGoal(partial = false) {
 
         check('title', typeof b.title === 'string' && b.title.trim() !== '', 'must be a non-empty string');
         check('year', Number.isInteger(b.year), 'must be a whole number');
-        check('goalType', ['books', 'pages'].includes(b.goaltype), 'must be "books" or "pages"');
+        check('goalType', ['books', 'pages'].includes(b.goalType), 'must be "books" or "pages"');
         check('goalAmount', typeof b.goalAmount === 'number' && b.goalAmount > 0, 'must be a number greater than 0');
         check('startDate', !Number.isNaN(Date.parse(b.startDate)), 'must be a valid date');
         check('endDate', !Number.isNaN(Date.parse(b.endDate)), 'must be a valid date');
