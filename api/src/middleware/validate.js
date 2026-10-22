@@ -26,13 +26,13 @@ export function validateGoal(partial = false) {
 }
 
 export function validateEntry(partial = false) {
-    return(res, req, next) => {
+    return(req, res, next) => {
         const b = req.body;
         const problems = [];
 
-        const check = (field, ok, message) => {
+        const check = (field, ok, message, required = true) => {
             const missing = b[field] === undefined;
-            if (missing && !partial) problems.push({field, message: 'is required'});
+            if (missing && required && !partial) problems.push({field, message: 'is required'});
             else if (!missing && !ok) problems.push({field, message });
         };
 
@@ -43,7 +43,7 @@ export function validateEntry(partial = false) {
 
         //optional fields, only checked if sent
         check('status', ['to-read', 'in-progress', 'finished'].includes(b.status), 'must be "to-read", "in-progress", or "finished"', false);
-        check('pagesRead', Number.isInteger(b.pagesRead) && b.pages >= 0, 'must be a whole number greater than or equal to 0', false);
+        check('pagesRead', Number.isInteger(b.pagesRead) && b.pagesRead >= 0, 'must be a whole number greater than or equal to 0', false);
         check('rating', Number.isInteger(b.rating) && b.rating >= 1 && b.rating <= 5, 'must be a whole number between 1 and 5', false);
 
         if (problems.length > 0) {
