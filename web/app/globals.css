@@ -9,6 +9,11 @@ header {
   border-bottom: 1px solid #ddd;
 }
 
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
 main {
   padding: 2rem;
 }
