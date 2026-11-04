@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
         <header>
           <h1>PageTurner</h1>
           <nav>
-            <link href="/">Home</link>
+            <Link href="/">Home</Link>
             <Link href="/goals">Goals</Link>
             <Link href="/goals/new">New Goal</Link>
           </nav>
