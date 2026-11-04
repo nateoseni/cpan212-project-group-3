@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 
-export default async function EditGoalPage({ params }) {
+export default function EditGoalPage({ params }) {
+  //unwrap params using use() because params is a promise in server components
+  const resolvedParams = use(params);
+  const id = resolvedParams.id; //extract the goal ID from the params
+
+
   const router = useRouter();
 
   //state management for the goal data, loading state, request submission and validation errors
@@ -34,8 +39,10 @@ export default async function EditGoalPage({ params }) {
         setLoading(false); //stop loading indicator
       }
     }
-    loadGoal();
-  }, [params]); //dependency array ensures this runs only once when the component mounts
+    if(id) {
+      loadGoal(); //only load if id is available
+    }
+  }, [id]); //dependency array ensures this runs only once when the component mounts
 
   //handle form submission
   async function handleSubmit(event) {
