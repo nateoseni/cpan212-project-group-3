@@ -17,3 +17,7 @@ nav {
 main {
   padding: 2rem;
 }
+
+.error {
+  color: red;
+}
