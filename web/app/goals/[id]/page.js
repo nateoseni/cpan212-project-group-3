@@ -9,7 +9,7 @@ async function ExternalBookInfo({ goalTitle }) {
   const extData = await extRes.json();
 
   return (
-    <div classname="external-info">
+    <div className="external-info">
       <h3>Open Library Suggestions:</h3>
       <p>Found {extData.numFound || 0} matching books</p>
     </div>

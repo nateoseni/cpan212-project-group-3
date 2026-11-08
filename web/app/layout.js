@@ -19,6 +19,7 @@ export default function RootLayout({ children }) {
             <Link href="/">Home</Link>
             <Link href="/goals">Goals</Link>
             <Link href="/goals/new">New Goal</Link>
+            <Link href="/books">Find books</Link>
           </nav>
         </header>
         <NotificationBanner /> {/* show any notifications */}
