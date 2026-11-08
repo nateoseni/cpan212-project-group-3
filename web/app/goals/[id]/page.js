@@ -18,6 +18,7 @@ async function ExternalBookInfo({ goalTitle }) {
 
 
 export default async function GoalDetailPage({ params }) {
+  //fetch data using the dynamic route parameter from the API ex. fetch('/api/goals/abc') for /goals/abc
   const { id } = await params;
 
   //fetch the main goal data from the API

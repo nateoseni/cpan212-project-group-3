@@ -21,3 +21,9 @@ main {
 .error {
   color: red;
 }
+
+.notice {
+  background: #e6f4ea;
+  border: 1px solid #a3d9a5;
+  padding: 1rem;
+}

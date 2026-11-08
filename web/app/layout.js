@@ -1,5 +1,7 @@
 import './globals.css';
 import Link from 'next/link';
+import { NotificationProvider } from './NotificationContext';
+import NotificationBanner from './NotificationBanner';
 
 export const metadata = {
   title: 'PageTurner',
@@ -10,6 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <NotificationProvider>
         <header>
           <h1>PageTurner</h1>
           <nav>
@@ -18,7 +21,9 @@ export default function RootLayout({ children }) {
             <Link href="/goals/new">New Goal</Link>
           </nav>
         </header>
-        <main>{children}</main>
+        <NotificationBanner /> {/* show any notifications */}
+        <main>{children}</main> {/* render the page content */}
+        </NotificationProvider>
       </body>
     </html>
   );

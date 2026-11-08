@@ -1,7 +1,8 @@
 'use client'; //client component because it uses useState and useEffect
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { useNotification } from '../../../NotificationContext';
 
 
 export default function EditGoalPage({ params }) {
@@ -11,6 +12,7 @@ export default function EditGoalPage({ params }) {
 
 
   const router = useRouter();
+  const { notify } = useNotification(); //get the notify function from the notification context
 
   //state management for the goal data, loading state, request submission and validation errors
   const [goal, setGoal] = useState(null);
@@ -42,7 +44,7 @@ export default function EditGoalPage({ params }) {
     if(id) {
       loadGoal(); //only load if id is available
     }
-  }, [id]); //dependency array ensures this runs only once when the component mounts
+  }, [id]); //pass id into useEffect array ensures this runs only once when the component mounts
 
   //handle form submission
   async function handleSubmit(event) {
@@ -74,8 +76,12 @@ export default function EditGoalPage({ params }) {
 
       //handle validation errors returned from the API (400 status)
       if (!response.ok) {
-        if (response.status === 400 && data.details) {
-          setErrors(data.details); //display validaton errors next to fields
+        if (response.status === 400 && data.error?.details) {
+          const fieldErrors = {};
+          for (const d of data.error.details) {
+            fieldErrors[d.field] = d.message;
+          }
+          setErrors(fieldErrors); //display validaton errors next to fields
         } else {
           setMessage(data.error?.message || 'Something went wrong while saving the goal');
         }
@@ -84,6 +90,7 @@ export default function EditGoalPage({ params }) {
       }
 
       //on successful update, redirect to the goal detail page
+      notify('Goal updated'); //show a success notification
       router.push(`/goals/${resolvedParams.id}`);
       router.refresh(); //refresh the page to show updated data
     } catch (err) {

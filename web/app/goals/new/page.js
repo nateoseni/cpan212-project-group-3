@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useNotification } from '../NotificationContext'; // new/page.js
 
 
 export default function NewGoalPage() {
   const router = useRouter();
+  const { notify } = useNotification();
 
   //state is the value the page remembers, one changes and react re-renders the page
   const [submitting, setSubmitting] = useState(false); //true when the form is being submitted
@@ -46,7 +48,7 @@ export default function NewGoalPage() {
         const data = await res.json();
         //api sends back an array of field errors, convert it to an object keyed by field name for easier display in the form
         const fieldErrors = {};
-        for (const d of data.errors.details ?? []) {
+        for (const d of data.error.details ?? []) {
           fieldErrors[d.field] = d.message;
         }
         setErrors(fieldErrors);
@@ -56,6 +58,8 @@ export default function NewGoalPage() {
 
       //any other error is displayed as a general message
       if (!res.ok) throw new Error('Failed to save the goal');
+
+      notify('Goal created'); //show a success notification
 
       //after saving land on the detail or list page and see the change
       router.push('/goals'); //redirect to the list page after saving
