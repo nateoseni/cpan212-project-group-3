@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useNotification } from '../NotificationContext'; // new/page.js
+import { useNotification } from '../../NotificationContext';
 
 
 export default function NewGoalPage() {
