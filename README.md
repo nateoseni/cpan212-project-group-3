@@ -32,7 +32,7 @@ Then open http://localhost:3000. The web app will show an error if the API isn't
 | api | `api/.env` |  `CONTACT_EMAIL` | `user@example.com` | Sent to Open Library in the User-Agent header |
 | web | `web/.env.local` | `API_URL` | `http://localhost:4000` | Where Next.js finds the Express API (used by server components and by `/api` rewrite) |
 
-## Pages
+### Pages
 
 | Page | URL |
 | --- | --- |
@@ -42,17 +42,17 @@ Then open http://localhost:3000. The web app will show an error if the API isn't
 | Edit goal | `/goals/:id/edit` |
 | Book search | `/books` |
 
-## How the frontend gets its data
+### How the frontend gets its data
 
 The Next.js app only talks to the Express API. Server components fetch with `process.env.API_URL`. Code in the browser calls `/api/...`, and `next.config.mjs` rewrites those requests to the Express API. Only Express calls the external API (Open Library)
 
-## Shared state
+### Shared state
 
 React Context (`NotificationContext`) holds notification messages. The create and edit forms set them and a banner in the root layout shows them
 
-### 3. MongoDB 
+## 3. MongoDB 
 
-## Setup 
+### Setup 
 
 1. Create a MongoDB Atlas cluser and a database user, allow your current ip address in network access
 2. In 'api/', copy `.env.example` to `.env` and set `MONGODB_URI` to your connection string with the database name at the end 
@@ -63,7 +63,7 @@ React Context (`NotificationContext`) holds notification messages. The create an
 | `MONGODB_URI` | `api/.env` | MongoDB Atlas connection string |
 | `API_URL` | `web/.env.local` | Where the Next.js app finds the API (`http://localhost:4000`) |
 
-## Seed data
+### Seed data
 
 ```bash
 cd api
@@ -72,7 +72,7 @@ npm run seed
 
 Deletes every goal and entry, then recreates 30 goals and 24 entries (for the first 12 goals). No API route creates or deletes seed data
 
-## `GET /api/goals` query parameters
+### `GET /api/goals` query parameters
 
 | Param | Values | Default | Notes |
 |---|---|---|---|
@@ -89,12 +89,12 @@ Invalid values (like `sort=password` or `limit=500`) return `400` with error det
 
 Example: `GET /api/goals?goalType=books&year=2026&sort=-title&page=2&limit=5`
 
-## Related data and errors
+### Related data and errors
 
 - Each entry belongs to a goal (`Entry.goal` references `Goal`). `GET /api/entries/:id` and `GET /api/entries` use `populate` to return the goal's title, type and year
 - Mongoose validation errors return `400` as `{ "error": { "message", "details": [{ "field", "message" }] } }`. A badly formed or unknown id returns `404`
 - The goals page (`/goals`) keeps its filters, sort and page in the URL, for example: `/goals?goalType=books&sort=-year&page=2`
 
-## AI Use: 
+### AI Use: 
 
 Throughout the project, Claude was used to understand ideas/concepts, helped to provide assistance with structuring, and some troubleshooting such as helping find typos (had a particularly annoying time with a typo in the CastError check)
