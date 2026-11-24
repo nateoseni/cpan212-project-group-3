@@ -35,7 +35,7 @@ export function errorHandler(err, req, res, next) {
   }
 
   //value that cant be converted to the right type (CastError)
-  if (err.name === 'CaseError') {
+  if (err.name === 'CastError') {
     if (err.path === '_id') {
       return res.status(404).json({ error: { message: 'Resource not found', details: null }})
     }

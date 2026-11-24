@@ -25,6 +25,8 @@ function readInt(value, name, fallback, problems) {
     }
     return Number(value);
 }
+//only these fields may come from the request body, anything else (like _id or createdAt) is ignored
+const FIELDS = ['title', 'year', 'goalType', 'goalAmount', 'startDate', 'endDate'];
 
 //copy only the allowed fields that were actually sent
 function pick(body) {
@@ -60,9 +62,11 @@ export async function listGoals(req, res) {
     if (q !== undefined) {
         if (typeof q !== 'string') {
             problems.push({ field: 'q', message: 'must be text' });
+        } else if (q.length > 100) {
+            problems.push({ field: 'q', message: 'must be 100 or fewer characters' })
         } else if (q.trim()) {
-            //sanitizeFilter strips operators like $regex from user data so wrap in mongoose.trusted() to claim operator over the user's
-            filter.title = mongoose.trusted({ $regex: escapeRegex(q.trim()), $options: 'i' });
+            //a RegEXP object passes sanitizeFilter, and the text is escaped first
+            filter.title = new RegExp(escapeRegex(q.trim()), 'i');
         }
     }
 

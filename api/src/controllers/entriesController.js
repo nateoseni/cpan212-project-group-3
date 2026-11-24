@@ -32,10 +32,19 @@ export async function listEntries(req, res) {
   const { goal, status } = req.query; //part of the url after the ?
   const filter = {}; //Mongo query built from the filters sent. filter says which events we want and empty filter means all of them
 
+  if (status !== undefined) {
+    //must be a single string, schema enum then limits which values are allowed
+    if (typeof status !== 'string' || !['to-read', 'in-progress', 'finished'].includes(status)) {
+      throw new HttpError(400, 'Invalid query', [
+        { field: 'status', message: 'must be one of: to-read, in-progress, finished' },
+      ]);
+    }
+    filter.status = status;
+  }
   //filter only applies if it was sent
   if (typeof goal === 'string') {
     //goal id not in right format cant match anything
-    if(!mongoose.isValidObjectId(goal)) return res.status(200).json([]);
+    if(!mongoose.isObjectIdOrHexString(goal)) return res.status(200).json([]);
     filter.goal = goal;
   }
   if (typeof status === 'string') filter.status = status;
