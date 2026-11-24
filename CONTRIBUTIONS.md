@@ -12,3 +12,8 @@ extenal API usage, and testing.
 
 Member: Nathaniel oseni
 Contributions: Setup for Next.js app in web/, configured the /api rewrite and API_URL environment variable, created the pages including the goals list, goal detail (dynamic route with notFound handling), create goal form and edit goal form. Provided API validation errors next to the fields. Added loading, empty, and error states, and a React Context showing messages when a goal is created or updated. Also created a book search page which gets results through the Express endpoint.
+
+## M4: MongoDB persistence
+
+Member: Nathaniel oseni
+Contributions: Worked alone on M4. Did the MongoDB connection, Mongoose models for Goal and Entry, error handling, filter/sort/pagination for goals, goals list controls, and the seed script.
