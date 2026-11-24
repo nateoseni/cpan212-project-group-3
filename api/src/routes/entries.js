@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { validateEntry } from '../middleware/validate.js';
 import {
   listEntries,
   getEntry,
@@ -12,8 +11,9 @@ const router = Router();
 
 router.get('/', listEntries);
 router.get('/:id', getEntry);
-router.post('/', validateEntry(), createEntry);
-router.put('/:id', validateEntry(true), updateEntry);
+//Mongoose schema validation now runs in the create/update, dont need previous validate
+router.post('/', createEntry);
+router.put('/:id', updateEntry);
 router.delete('/:id', deleteEntry);
 
 export default router;

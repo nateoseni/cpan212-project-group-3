@@ -30,7 +30,7 @@ function checkPages(pages, pagesRead) {
 //GET /api/entries
 export async function listEntries(req, res) {
   const { goal, status } = req.query; //part of the url after the ?
-  const filter = {}; //Mongo query built from the filters sent
+  const filter = {}; //Mongo query built from the filters sent. filter says which events we want and empty filter means all of them
 
   //filter only applies if it was sent
   if (typeof goal === 'string') {
