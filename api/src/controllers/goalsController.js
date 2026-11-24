@@ -1,59 +1,59 @@
-import crypto from 'node:crypto';
-import { goals, entries } from '../data/store.js';
+import Goal from '../models/Goal.js';
+import Entry from '../models/Entry.js';
 import { HttpError } from '../middleware/errors.js';
+import { requireValidId } from '../utils/ids.js';
 
-//helper function to look goal up by id
-function findGoal(id) {
-    //traverse array and return the first goal that matches id
-    const goal = goals.find((g) => g.id == id);
-    if (!goal) throw new HttpError(404, `Goal not found: ${id}`);
-    return goal;
+const FIELDS = ['title', 'year', 'goalType', 'goalAmount', 'startDate', 'endDate'];
+
+//copy only the allowed fields that were actually sent
+function pick(body) {
+    const out = {};
+    for (const key of FIELDS) {
+        if (body[key] !== undefined) out[key] = body[key];
+    }
+    return out;
 }
+
 
 //GET /api/goals/
 //convert goals array to json
-export function listGoals(req, res) {
+export async function listGoals(req, res) {
+    const goals = await Goal.find().sort({ createdAt: 1 }); //all goals with oldest first
     res.status(200).json(goals);
 }
 
 //GET /api/goals/:id
 //find by id, returns a goal or throws 404
-export function getGoal(req, res) {
-    res.status(200).json(findGoal(req.params.id));
+export async function getGoal(req, res) {
+    requireValidId(req.params.id, 'Goal');
+    const goal = await Goal.findById(req.params.id);
+    if (!goal) throw new HttpError(404, `Goal not found: ${req.params.id}`);
+    res.status(200).json(goal);
 }
 
 //POST /api/goals
-export function createGoal(req, res) {
+//builds document, runs schema validation and saves it
+export async function createGoal(req, res) {
     //req.body is the json sent by the client
-    const { title, year, goalType, goalAmount, startDate, endDate } = req.body; //take properties from req.body into variables
-    //build an object with random id and previous fields
-    const goal = {
-        id: crypto.randomUUID(),
-        title, year, goalType, goalAmount, startDate, endDate,
-    };
-    goals.push(goal); //push the goal to array
+    const goal = await Goal.create(pick(req.body));
     res.status(201).json(goal);
 }
 
 //PUT /api/goals/:id
-export function updateGoal(req, res) {
-    const goal = findGoal(req.params.id);
-    const { title, year, goalType, goalAmount, startDate, endDate } = req.body;
-    const changes = { title, year, goalType, goalAmount, startDate, endDate } //collects the fields from req.body
-    for (const [key, value] of Object.entries(changes)) { //Object.entries(changes) turns the object into a list of [key, value] pairs
-        if (value !== undefined) goal[key] = value; //if value is not undefined, write new value into real goal object
-    }
+export async function updateGoal(req, res) {
+    const goal = await Goal.findByIdAndUpdate(req.params.id, pick(req.body), {
+        returnDocument: 'after', //return the updated document
+        runValidators: true, //apply the schema rules to the update
+    });
+    if (!goal) throw new HttpError(404, `Goal not found: ${req.params.id}`);
     res.status(200).json(goal)
 }
 
 //DELETE /api/goals/:id
-export function deleteGoal(req, res) {
-    const goal = findGoal(req.params.id);
-    goals.splice(goals.indexOf(goal), 1); //find goal position in array, and remove 1 item at that position
-
-    //remove every entry belonging to the deleted goal by counting backwards
-    for (let i = entries.length - 1; i >= 0; i--) {
-        if (entries[i].goal === goal.id) entries.splice(i, 1);
-    }
+export async function deleteGoal(req, res) {
+    requireValidId(req.params.id, 'Goal');
+    const goal = await Goal.findByIdAndDelete(req.params.id);
+    if (!goal) throw new HttpError(404, `Goal not found: ${req.params.id}`);
+    await Entry.deleteMany({ goal: goal._id}); //remove its entries too
     res.status(204).send(); //204 means success, no content and sends with an empty body
 }

@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
 //makes JSON output use "id" (a string) and hide "_id" and "__v", so the frontend which reads goal.id, keeps working
+
 export const jsonOptions = {
-  virtuals: true,
-  versionKey: false,
+  virtuals: true, //include the virtual "id" mongoose provides
+  versionKey: false, //hid the internal "__v" field
   transform: (doc, ret) => {
-    delete ret._id;
+    delete ret._id; //"id" field replaces it
     return ret;
   },
 };
@@ -16,6 +17,7 @@ const dateRule = {
   match: [/^\d{4}-\d{2}-\d{2}$/, 'must be a date like 2026-01-31'],
 };
 
+//describes the shape of a goal and rules for every goal
 const goalSchema = new mongoose.Schema(
     {
         title: {

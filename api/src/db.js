@@ -14,8 +14,8 @@ export async function connectDb() {
     try {
         //give up after 10 seconds instead of default 30
         await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
-    } catch (error) {
-        console.error('Could not connect to MongoDB: ' + error.message);
+    } catch (err) {
+        console.error('Could not connect to MongoDB: ' + err.message);
         process.exit(1);
     }
 

@@ -1,16 +1,26 @@
-import crypto from 'node:crypto';
-import { goals, entries } from '../data/store.js';
+import mongoose from 'mongoose';
+import Goal from '../models/Goal.js';
+import Entry from '../models/Entry.js';
 import { HttpError } from '../middleware/errors.js';
+import { requireValidId } from '../utils/ids.js';
 
-function findEntry(id) {
-  const entry = entries.find((e) => e.id === id);
-  if (!entry) throw new HttpError(404, `Entry not found: ${id}`);
-  return entry;
+const FIELDS = [
+  'goal', 'externalKey', 'title', 'author', 'pages', 'coverId',
+  'status', 'pagesRead', 'startDate', 'finishDate', 'rating', 'notes',
+];
+
+//copy only the allowed fields that were sent
+function pick(body) {
+  const out = {};
+  for (const key of FIELDS) {
+    if (body[key] !== undefined) out[key] = body[key];
+  }
+  return out;
 }
 
 //pagesRead can never be more than the book's page count, helper function to check
-function checkPages(entry) {
-  if (entry.pagesRead > entry.pages) {
+function checkPages(pages, pagesRead) {
+  if (pagesRead > pages) {
     throw new HttpError(400, 'Validation failed', [
       { field: 'pagesRead', message: 'cannot be more than pages' },
     ]);
@@ -18,55 +28,71 @@ function checkPages(entry) {
 }
 
 //GET /api/entries
-export function listEntries(req, res) {
+export async function listEntries(req, res) {
   const { goal, status } = req.query; //part of the url after the ?
-  let result = entries; //start with every entry
+  const filter = {}; //Mongo query built from the filters sent
 
   //filter only applies if it was sent
-  if (typeof goal === 'string') result = result.filter((e) => e.goal === goal); //keep entries where goal equals the goal id from URL
-  if (typeof status === 'string') result = result.filter((e) => e.status === status);
-  res.status(200).json(result);
+  if (typeof goal === 'string') {
+    //goal id not in right format cant match anything
+    if(!mongoose.isValidObjectId(goal)) return res.status(200).json([]);
+    filter.goal = goal;
+  }
+  if (typeof status === 'string') filter.status = status;
+
+  //populate swaps each entry's goal id for a fiew fields of the goal itself
+  const entries = await Entry.find(filter)
+    .populate('goal', 'title goalType year')
+    .sort({ createdAt: 1});
+  res.status(200).json(entries);
 }
 
 //GET /api/entries/:id
-export function getEntry(req, res) {
-  res.status(200).json(findEntry(req.params.id));
+export async function getEntry(req, res) {
+  requireValidId(req.params.id, 'Entry');
+  const entry = await Entry.findById(req.params.id).populate('goal', 'title goalType year');
+  if (!entry) throw new HttpError(404, `Entry not found: ${req.params.id}`);
+  res.status(200).json(entry);
 }
 
 //POST /api/entries
-export function createEntry(req, res) {
-  if (!goals.some((g) => g.id === req.body.goal)) {
+export async function createEntry(req, res) {
+  const data = pick(req.body)
+
+  requireValidId(data.goal, 'Goal');
+  if (!(await Goal.exists({ _id: data.goal }))) {
     throw new HttpError(404, `Goal not found: ${req.body.goal}`);
   }
+  checkPages(data.pages, data.pagesRead ?? 0); //with ?? 0: pagesRead defaults to 0 when missing
 
-  const entry = {
-    id: crypto.randomUUID(),
-    status: 'to-read',
-    pagesRead: 0,
-    ...req.body,
-    createdAt: new Date().toISOString(),
-  };
-  checkPages(entry);
-
-  entries.push(entry); //save to the in-memory array
+  const entry = await Entry.create(data); //run schema validation then saves
   res.status(201).json(entry);
 }
 
 //PUT /api/entries/:id
-export function updateEntry(req, res) {
-  const entry = findEntry(req.params.id);
+export async function updateEntry(req, res) {
+  requireValidId(req.params.id, 'Entry');
+  
+  //load current entry first, so pages check can use its current values when the request only sends of of two fields
+  const existing = await Entry.findById(req.params.id);
+  if (!existing) throw new HttpError(404, `Entry not found: ${req.params.id}`);
 
-  //build updated version in a copy, so real entry isnt changed yet if failed check
-  const updated = { ...entry, ...req.body };
-  checkPages(updated);
+  const changes = pick(req.body);
+  delete changes.goal; //an entry cannot move to another goal
 
-  Object.assign(entry, updated); //copy checked values onto the real entry
+  checkPages(changes.pages ?? existing.pages, changes.pagesRead ?? existing.pagesRead);
+
+  const entry = await Entry.findByIdAndUpdate(req.params.id, changes, {
+    returnDocument: 'after',
+    runValidators: true,
+  });
   res.status(200).json(entry);
 }
 
 //DELETE /api/entries/:id
-export function deleteEntry(req, res) {
-  const entry = findEntry(req.params.id);
-  entries.splice(entries.indexOf(entry), 1);
+export async function deleteEntry(req, res) {
+  requireValidId(req.params.id, 'Entry');
+  const entry = await Entry.findByIdAndDelete(req.params.id);
+  if (!entry) throw new HttpError(404, `Entry not found: ${req.params.id}`);
   res.status(204).send();
 }

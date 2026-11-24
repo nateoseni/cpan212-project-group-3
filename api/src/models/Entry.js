@@ -3,13 +3,13 @@ import { jsonOptions } from './Goal.js';
 
 const entrySchema = new mongoose.Schema(
     {
-        //ref links this entry to a Goal, which is what populate() follows (item 3)
+        //ref links this entry to a 'Goal', which tells mongoose which model that id belongs to, which is what populate() follows
         goal: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Goal',
             required: [true, 'is required'],
         },
-        externalKey: {type: String, trim: true},
+        externalKey: {type: String, trim: true}, //Open Library work key
         title: {
             type: String,
             required: [true, 'is required'],
