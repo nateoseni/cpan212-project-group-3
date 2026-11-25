@@ -56,7 +56,7 @@ React Context (`NotificationContext`) holds notification messages. The create an
 
 1. Create a MongoDB Atlas cluser and a database user, allow your current ip address in network access
 2. In 'api/', copy `.env.example` to `.env` and set `MONGODB_URI` to your connection string with the database name at the end 
-(`.../pageturner`). For example, MONGODB_URI=mongodb+srv://<username>:<password>@cpan212.fxqfwif.mongodb.net/pageturner
+(`.../pageturner`). For example, MONGODB_URI=mongodb+srv://'username':'password'@cpan212.fxqfwif.mongodb.net/pageturner
 3. Run `npm install` and `npm run dev` in `api/`. the API exits with a message if `MONGODB_URI` is missing
 
 | Variable | Where | Purpose |
